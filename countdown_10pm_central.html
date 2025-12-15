@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Countdown to 10 PM Central</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; display: grid; place-items: center; min-height: 100vh; background: #0b0f17; color: #e9eef7; }
+    .card {
+      width: min(520px, 92vw);
+      padding: 22px 22px 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .title { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+    .timeRow { margin-top: 10px; display: flex; justify-content: space-between; gap: 10px; font-size: 13px; opacity: .85; }
+    .big { margin-top: 14px; font-size: 54px; font-weight: 700; line-height: 1; }
+    .sub { margin-top: 10px; font-size: 14px; opacity: .85; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 14px; padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      font-size: 13px; opacity: .95;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: #2ee59d; box-shadow: 0 0 16px rgba(46,229,157,.7); }
+    .warn .dot { background: #ffcc00; box-shadow: 0 0 16px rgba(255,204,0,.6); }
+    .done .dot { background: #ff4d4d; box-shadow: 0 0 16px rgba(255,77,77,.6); }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="title">Minutes until 10:00 PM Central (America/Chicago) — tonight</div>
+
+    <div class="timeRow">
+      <div>Central time now: <span id="ctNow">—</span></div>
+      <div>Target: <span id="ctTarget">—</span></div>
+    </div>
+
+    <div class="big" id="minutesLeft">—</div>
+    <div class="sub" id="detail">—</div>
+
+    <div class="pill" id="statusPill">
+      <span class="dot"></span>
+      <span id="statusText">Running</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+  <script>
+    const { DateTime } = luxon;
+    const ZONE = "America/Chicago";
+
+    function update() {
+      const now = DateTime.now().setZone(ZONE);
+      const target = now.set({ hour: 22, minute: 0, second: 0, millisecond: 0 });
+
+      const totalSeconds = Math.floor(target.diff(now, "seconds").seconds);
+
+      document.getElementById("ctNow").textContent =
+        now.toFormat("ccc, LLL d • h:mm:ss a ZZZZ");
+      document.getElementById("ctTarget").textContent =
+        target.toFormat("ccc, LLL d • h:mm:ss a ZZZZ");
+
+      const minutesLeftEl = document.getElementById("minutesLeft");
+      const detailEl = document.getElementById("detail");
+      const pill = document.getElementById("statusPill");
+      const statusText = document.getElementById("statusText");
+
+      if (totalSeconds <= 0) {
+        minutesLeftEl.textContent = "0";
+        detailEl.textContent = "It’s 10:00 PM Central (or later).";
+        pill.classList.add("done");
+        pill.classList.remove("warn");
+        statusText.textContent = "Done";
+        return;
+      }
+
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+
+      minutesLeftEl.textContent = String(mins);
+      detailEl.textContent =
+        `${mins} minute${mins === 1 ? "" : "s"} and ${secs} second${secs === 1 ? "" : "s"} remaining.`;
+
+      if (mins < 30) {
+        pill.classList.add("warn");
+        pill.classList.remove("done");
+        statusText.textContent = "Closing in";
+      } else {
+        pill.classList.remove("warn", "done");
+        statusText.textContent = "Running";
+      }
+    }
+
+    update();
+    setInterval(update, 250);
+  </script>
+</body>
+</html>
